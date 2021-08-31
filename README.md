@@ -6,6 +6,8 @@ This repository is a weekly snapshot of all the AI/ML/Big Data salary data obtai
 
 The primary goal is to have data that can provide better guidance in regards to what's being paid globally. So newbies, experienced pros, hiring managers, recruiters and also startup founders or people wanting to make a career switch can make better informed decisions.
 
+For a description of the fields/values contained in the dataset see https://salaries.ai-jobs.net/download/.
+
 ## License / Terms of Use
 
 The data is published in the public domain under CC0. Read the full legal code [here](https://creativecommons.org/publicdomain/zero/1.0/legalcode).
