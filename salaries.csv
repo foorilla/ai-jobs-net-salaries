@@ -1,17 +1,20 @@
 work_year,experience_level,employment_type,job_title,salary,salary_currency,salary_in_usd,employee_residence,remote_ratio,company_location,company_size
+2022e,SE,FT,Principal Data Scientist,148000,EUR,167981,DE,100,DE,M
+2021,SE,FT,Computer Vision Engineer,24000,USD,24000,BR,100,BR,M
+2021,MI,FT,Applied Machine Learning Scientist,38400,USD,38400,VN,100,US,M
 2022e,EN,FT,Financial Data Analyst,100000,USD,100000,US,50,US,L
 2021e,MI,FT,Data Scientist,82500,USD,82500,US,100,US,S
 2021,EN,FT,Data Scientist,42000,EUR,49646,FR,50,FR,M
 2021e,SE,FT,Lead Data Scientist,3000000,INR,40570,IN,50,IN,L
 2022e,EN,FT,Data Engineer,120000,USD,120000,US,100,US,M
-2022e,SE,FT,Lead Machine Learning Engineer,80000,EUR,90511,DE,0,DE,M
+2022e,SE,FT,Lead Machine Learning Engineer,80000,EUR,90800,DE,0,DE,M
 2021e,EN,FT,Machine Learning Engineer,20000,USD,20000,IN,100,IN,S
 2022e,EN,FT,Computer Vision Engineer,125000,USD,125000,US,0,US,M
 2021,MI,FT,Data Scientist,700000,INR,9466,IN,0,IN,S
 2021,SE,FT,Machine Learning Scientist,120000,USD,120000,US,50,US,S
 2021,EN,PT,Data Analyst,8760,EUR,10354,ES,50,ES,M
 2021e,EN,FT,Applied Data Scientist,80000,GBP,110037,GB,0,GB,L
-2022e,EN,FT,ML Engineer,20000,EUR,22627,PT,100,PT,L
+2022e,EN,FT,ML Engineer,20000,EUR,22700,PT,100,PT,L
 2021,EN,FT,Data Analyst,50000,USD,50000,US,100,US,M
 2021e,SE,FT,Principal Data Engineer,200000,USD,200000,US,100,US,M
 2021e,MI,FT,Big Data Engineer,60000,USD,60000,ES,50,RO,M
