@@ -1,4 +1,11 @@
 work_year,experience_level,employment_type,job_title,salary,salary_currency,salary_in_usd,employee_residence,remote_ratio,company_location,company_size
+2022,EN,FT,Research Scientist,120000,USD,120000,US,100,US,L
+2022,MI,FT,Data Scientist,135000,USD,135000,US,100,US,L
+2022,SE,FT,Data Analytics Lead,405000,USD,405000,US,100,US,L
+2021,SE,FT,Data Engineering Manager,150000,USD,150000,US,0,US,L
+2021,SE,FT,Data Science Manager,240000,USD,240000,US,0,US,L
+2021,MI,FT,Data Analyst,135000,USD,135000,US,100,US,L
+2021,EN,FT,Data Scientist,80000,USD,80000,US,100,US,M
 2022,SE,FT,Applied Data Scientist,380000,USD,380000,US,100,US,L
 2022,MI,FT,Data Scientist,115000,CHF,124925,CH,0,CH,L
 2022,SE,FT,Applied Data Scientist,177000,USD,177000,US,100,US,L
