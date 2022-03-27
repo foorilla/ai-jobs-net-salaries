@@ -1,4 +1,11 @@
 work_year,experience_level,employment_type,job_title,salary,salary_currency,salary_in_usd,employee_residence,remote_ratio,company_location,company_size
+2022,EN,FT,Data Scientist,120000,AUD,86493,AU,50,AU,M
+2022,SE,FT,Data Scientist,165000,USD,165000,US,100,US,M
+2022,MI,FT,Machine Learning Scientist,153000,USD,153000,US,50,US,M
+2022,SE,FT,Data Scientist,100000,USD,100000,BR,100,US,M
+2022,SE,FT,Machine Learning Developer,100000,CAD,78823,CA,100,CA,M
+2022,MI,FT,Data Scientist,150000,PLN,36647,PL,100,PL,L
+2022,MI,FT,Principal Data Analyst,75000,USD,75000,CA,100,CA,S
 2020,MI,FT,Product Data Analyst,20000,USD,20000,HN,0,HN,S
 2022,EN,CT,Applied Machine Learning Scientist,29000,EUR,32647,TN,100,CZ,M
 2021,MI,FT,Research Scientist,69999,USD,69999,CZ,50,CZ,L
