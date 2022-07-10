@@ -1,4 +1,20 @@
 work_year,experience_level,employment_type,job_title,salary,salary_currency,salary_in_usd,employee_residence,remote_ratio,company_location,company_size
+2022,SE,FT,Data Engineer,200000,USD,200000,US,100,US,M
+2022,SE,FT,Data Engineer,160000,USD,160000,US,100,US,M
+2022,MI,FT,Data Engineer,110000,GBP,142767,GB,0,GB,M
+2022,MI,FT,Data Engineer,85000,GBP,110320,GB,0,GB,M
+2022,SE,FT,Data Analyst,117000,USD,117000,US,100,US,M
+2022,SE,FT,Data Analyst,99450,USD,99450,US,100,US,M
+2022,EN,FT,AI Scientist,240000,INR,3149,IN,0,IN,S
+2022,EN,FT,Data Engineer,129000,USD,129000,US,100,US,L
+2022,EN,FT,Data Engineer,86000,USD,86000,US,100,US,L
+2020,EN,FT,Data Engineer,1000000,INR,13493,IN,100,IN,L
+2020,EN,FT,Data Engineer,1000000,INR,13493,IN,100,IN,L
+2022,SE,FT,Data Scientist,160000,USD,160000,US,0,US,L
+2022,SE,FT,Data Scientist,119300,USD,119300,US,0,US,L
+2022,SE,FT,Business Data Analyst,100000,USD,100000,US,100,US,L
+2022,MI,FT,Data Scientist,25000,USD,25000,TR,50,TR,M
+2022,MI,FT,Data Analyst,90000,SGD,65950,SG,50,SG,M
 2022,MI,FT,AI Scientist,200000,USD,200000,US,100,US,M
 2022,EN,FT,Machine Learning Developer,180000,USD,180000,US,100,US,L
 2022,MI,FT,Data Scientist,153000,USD,153000,US,100,US,L
