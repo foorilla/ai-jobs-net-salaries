@@ -1,4 +1,21 @@
 work_year,experience_level,employment_type,job_title,salary,salary_currency,salary_in_usd,employee_residence,remote_ratio,company_location,company_size
+2022,MI,FT,BI Data Analyst,77000,AUD,54891,AU,100,AU,M
+2022,SE,FT,Data Scientist,175000,USD,175000,US,0,US,M
+2022,SE,FT,Data Scientist,140000,USD,140000,US,0,US,M
+2022,EN,FT,3D Computer Vision Researcher,2324,USD,2324,AX,0,AL,L
+2022,SE,FT,Lead Data Scientist,28500,EUR,30680,PT,50,PT,S
+2022,SE,FT,Analytics Engineer,250000,USD,250000,US,0,US,M
+2022,SE,FT,Analytics Engineer,63000,USD,63000,US,0,US,M
+2022,SE,FT,Data Scientist,160000,USD,160000,US,0,US,L
+2022,SE,FT,Data Scientist,119300,USD,119300,US,0,US,L
+2022,MI,FT,Research Scientist,145000,USD,145000,US,50,US,L
+2022,SE,FT,Data Engineer,105000,USD,105000,US,0,US,M
+2022,SE,FT,Data Engineer,90000,USD,90000,US,0,US,M
+2022,SE,FT,ETL Developer,146200,USD,146200,US,100,US,M
+2022,SE,FT,ETL Developer,124270,USD,124270,US,100,US,M
+2022,MI,FT,Data Scientist,225000,USD,225000,US,0,US,M
+2022,MI,FT,Data Scientist,160000,USD,160000,US,0,US,M
+2022,MI,FT,Data Scientist,52000,EUR,55978,NL,100,NL,S
 2022,SE,FT,Data Engineer,185800,USD,185800,CA,100,CA,M
 2022,SE,FT,Data Engineer,137400,USD,137400,CA,100,CA,M
 2022,SE,FT,Analytics Engineer,245000,USD,245000,US,0,US,M
