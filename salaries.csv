@@ -1,4 +1,14 @@
 work_year,experience_level,employment_type,job_title,salary,salary_currency,salary_in_usd,employee_residence,remote_ratio,company_location,company_size
+2023,SE,FT,Data Modeler,258700,USD,258700,US,0,US,M
+2023,SE,FT,Data Modeler,146600,USD,146600,US,0,US,M
+2023,MI,FT,Data Science Manager,190000,USD,190000,US,100,US,M
+2023,MI,FT,Data Science Manager,160000,USD,160000,US,100,US,M
+2023,EN,FT,Research Analyst,90000,USD,90000,US,100,US,M
+2023,EN,FT,Research Analyst,65000,USD,65000,US,100,US,M
+2023,MI,FT,Data Engineer,160000,USD,160000,US,100,US,M
+2023,MI,FT,Data Engineer,130000,USD,130000,US,100,US,M
+2023,MI,FT,Data Analyst,85000,USD,85000,US,0,US,M
+2023,MI,FT,Data Analyst,65000,USD,65000,US,0,US,M
 2023,SE,FT,ETL Developer,143800,USD,143800,US,0,US,M
 2023,SE,FT,ETL Developer,95800,USD,95800,US,0,US,M
 2023,MI,FT,Machine Learning Engineer,166000,USD,166000,US,0,US,M
