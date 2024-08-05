@@ -1,4 +1,4 @@
-# ai-jobs-net-salaries
+# # aijobs.net Global AI, ML, Data Science Salary Index
 
 ## A dataset of global salaries in AI/ML and Big Data
 
