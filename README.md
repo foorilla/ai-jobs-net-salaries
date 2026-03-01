@@ -2,7 +2,7 @@
 
 ## A dataset of global salaries in AI/ML and Big Data (2021 - 2025)
 
-This repository is a weekly snapshot of all the AI/ML/Big Data salary data obtained anonymously through the survey at [aijobs.net/salaries](https://aijobs.net/salaries/) (formerly ai-jobs.net) from 2021 to 2025.
+This repository is a weekly snapshot of all the AI/ML/Big Data salary data obtained anonymously through the survey at [aijobs.net/salaries](https://aijobs.net/salaries/) (formerly ai-jobs.net) from 2021 to 2025. UPDATE: You can find recent salary data aggregated from global tech job listings at [foorilla.com/api/](https://foorilla.com/api/).
 
 The primary goal is to have data that can provide better guidance in regards to what's being paid globally. So newbies, experienced pros, hiring managers, recruiters and also startup founders or people wanting to make a career switch can make better informed decisions.
 
