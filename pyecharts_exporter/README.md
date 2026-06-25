@@ -55,6 +55,18 @@ display_chart(bar)
 获取图表渲染所需的依赖文件信息（通常用于调试或自定义网页构建）。
 * **返回值**：返回一个字典，包含 `dependencies` (依赖列表), `cdn_urls` (完整链接列表), `html_tags` (生成的 script 标签文本) 和 `theme_detected` (探测到的主题)。
 
+### `display_transition_chart(map_chart: Base, bar_chart: Base, map_data: list, chart_id: str = "myChart", interval: int = 3000, cdn_provider: str = DEFAULT_CDN)`
+在 Jupyter 单元格中渲染一个**地图与柱状图自动切换**的交互图表。
+* **作用**：利用 ECharts 的 `universalTransition` 特性，在地图视图和柱状图排名视图之间定时自动轮播，实现两种图表类型的平滑动画过渡。
+* **参数**：
+  - `map_chart`：Pyecharts Map 实例（初始展示视图）。
+  - `bar_chart`：Pyecharts Bar 实例（用于提取配置，不直接渲染）。
+  - `map_data`：原始数据列表，格式 `[(name, value), ...]`。
+  - `chart_id`：图表 DOM 容器的 ID（默认 `"myChart"`）。
+  - `interval`：切换间隔，单位毫秒（默认 `3000`）。
+  - `cdn_provider`：CDN 提供商名称（默认 `"pyecharts_official"`）。
+* **返回值**：无（直接在输出区显示动态切换图表）。
+
 ---
 
 ## 5. `display_chart` 参数详解
@@ -109,6 +121,43 @@ line = (
 # 模块会自动发现主题为 macarons，并自动加载 macarons.js
 display_chart(line)
 ```
+
+### 示例 C：地图 ↔ 柱状图自动切换
+`display_transition_chart` 接收一个 Map 实例和一个 Bar 实例，在地理分布视图和排名柱状图之间每隔 N 毫秒自动切换，利用 `universalTransition` 实现平滑动画。
+
+```python
+from pyecharts.charts import Map, Bar
+from pyecharts import options as opts
+from pyecharts_exporter import display_transition_chart
+
+# 准备数据
+map_data = [
+    ("United States", 140000),
+    ("Germany", 95000),
+    ("Japan", 85000),
+    ("India", 45000),
+]
+
+# 构建地图
+salary_map = (
+    Map()
+    .add("薪资中位数 (USD)", map_data, maptype="world", is_map_symbol_show=False)
+    .set_global_opts(
+        title_opts=opts.TitleOpts(title="全球 AI 人才薪资"),
+        visualmap_opts=opts.VisualMapOpts(max_=150000),
+    )
+)
+
+# 构建柱状图（仅用于提取配色等配置，不直接渲染）
+bar_chart = (
+    Bar()
+    .add_xaxis([item[0] for item in map_data])
+    .add_yaxis("薪资", [item[1] for item in map_data])
+)
+
+# 渲染：每 3 秒在地图和柱状图之间切换
+display_transition_chart(salary_map, bar_chart, map_data, interval=3000)
+```
 ------
 
 
@@ -152,9 +201,12 @@ display_chart(line)
 
 * **实例属性 (Instance Attributes)**：
     * `dep_manager` *(JSDependencyManager)*：在初始化时绑定的资源调度器实例，用于为当前渲染器提供依赖分析服务。
+    * `_custom_scripts` *(List[str])*：存储通过 `add_script` 注入的自定义 JavaScript 代码。
 * **核心方法 (Instance Methods)**：
     * `__init__(self, cdn_provider: str, custom_cdn_base: str = None)`
         * **说明**：初始化渲染器，并同时实例化底层的 `JSDependencyManager`。每次调用都会生成全新实例，彻底解决状态污染问题。
+    * `add_script(self, js_code: str) -> Self`
+        * **说明**：添加自定义 JavaScript 代码，在图表渲染完成后注入到 iframe 沙箱中执行。支持链式调用。用于实现图表交互增强（如自动选中、定时切换、事件监听等）。
     * `render(self, chart: Base, width: str = None, height: str = None, scrolling: str = "no", sandbox: str = "...") -> IPython.display.HTML`
         * **说明**：**核心渲染函数**。
         * 1. 调用 `self.dep_manager.get_dependencies()` 拿到所需注入的 `<script>` 标签文本。
