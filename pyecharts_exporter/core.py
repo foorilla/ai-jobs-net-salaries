@@ -205,14 +205,27 @@ def display_transition_chart(
     map_data: list,
     chart_id: str = "myChart",
     interval: int = 3000,
+    auto_play: bool = True,
     bar_option_override: dict = None,
     cdn_provider: str = DEFAULT_CDN
 ):
+    """
+    在 Jupyter Notebook 中渲染一个地图和柱状图自动切换的图表。
+    
+    参数:
+        map_chart: Pyecharts Map 实例
+        bar_chart: Pyecharts Bar 实例 (保留参数，目前未使用，为将来扩展预留)
+        map_data: 原始数据 [(name, value), ...]
+        chart_id: 图表 DOM 元素的 ID
+        interval: 切换间隔（毫秒）
+        auto_play: 是否自动播放切换动画（默认 True）
+        bar_option_override: 自定义柱状图 ECharts option（会合并到默认配置上）
+    """
     renderer = EChartsRenderer(cdn_provider)
     
     data_json = json.dumps(map_data)
     
-    # ========== 最简默认配置（只包含必要的框架） ==========
+    # ========== 默认柱状图配置 ==========
     default_bar_option = {
         "title": {
             "text": "数据排名",
@@ -258,13 +271,13 @@ def display_transition_chart(
     // 从 JSON 加载柱状图配置
     var barOption = {bar_option_json};
 
-    // 🔧 强制注入数据（确保数据一定存在）
+    // 强制注入数据
     barOption.yAxis.data = names;
     barOption.series[0].data = values;
     barOption.series[0].id = 'salary';
     barOption.series[0].universalTransition = true;
 
-    // 🔧 注入 formatter 函数（JSON 无法序列化函数）
+    // 注入 formatter 函数
     if (barOption.tooltip && !barOption.tooltip.formatter) {{
         barOption.tooltip.formatter = function(params) {{
             if (params && params.length > 0) {{
@@ -280,7 +293,6 @@ def display_transition_chart(
         }};
     }}
 
-    // 🔧 注入 series label 的 formatter
     if (barOption.series && barOption.series[0] && barOption.series[0].label) {{
         if (barOption.series[0].label.show && !barOption.series[0].label.formatter) {{
             barOption.series[0].label.formatter = function(params) {{
@@ -289,7 +301,7 @@ def display_transition_chart(
         }}
     }}
 
-    // 🔧 查找 echarts 实例
+    // 查找 echarts 实例
     var chartDom = document.getElementById('{chart_id}');
     if (!chartDom) {{
         var allDoms = document.querySelectorAll('[_echarts_instance_]');
@@ -298,18 +310,12 @@ def display_transition_chart(
         }}
     }}
     
-    if (!chartDom) {{
-        console.log('未找到 ECharts 实例');
-        return;
-    }}
+    if (!chartDom) {{ return; }}
     
     var chart = echarts.getInstanceByDom(chartDom);
-    if (!chart) {{
-        console.log('无法获取 ECharts 实例');
-        return;
-    }}
+    if (!chart) {{ return; }}
 
-    // 🔧 给当前地图 series 添加 universalTransition 所需的属性
+    // 给当前地图 series 添加 universalTransition 所需的属性
     var mapOption = chart.getOption();
     if (mapOption.series && mapOption.series.length > 0) {{
         mapOption.series[0].id = 'salary';
@@ -317,16 +323,70 @@ def display_transition_chart(
         chart.setOption(mapOption, true);
     }}
 
-    // 🔧 定时切换（增加错误处理）
+    // ========== 暂停/播放控制 ==========
     var currentOption = mapOption;
-    setInterval(function() {{
+    var timerId = null;
+    var isPaused = {str(not auto_play).lower()};
+    
+    // 创建控制按钮容器
+    var btnContainer = document.createElement('div');
+    btnContainer.style.cssText = 'position:absolute; top:10px; right:10px; z-index:9999; display:flex; gap:8px;';
+    
+    // 暂停/播放按钮
+    var pauseBtn = document.createElement('button');
+    pauseBtn.innerHTML = isPaused ? '▶ 播放' : '⏸ 暂停';
+    pauseBtn.style.cssText = 'padding:6px 12px; border:1px solid #ccc; border-radius:4px; background:#fff; cursor:pointer; font-size:13px; box-shadow:0 1px 3px rgba(0,0,0,0.12); transition:all 0.2s;';
+    pauseBtn.addEventListener('mouseenter', function() {{ this.style.background = '#f5f5f5'; }});
+    pauseBtn.addEventListener('mouseleave', function() {{ this.style.background = '#fff'; }});
+    
+    // 手动切换按钮
+    var switchBtn = document.createElement('button');
+    switchBtn.innerHTML = '🔄 切换';
+    switchBtn.style.cssText = 'padding:6px 12px; border:1px solid #ccc; border-radius:4px; background:#fff; cursor:pointer; font-size:13px; box-shadow:0 1px 3px rgba(0,0,0,0.12); transition:all 0.2s;';
+    switchBtn.addEventListener('mouseenter', function() {{ this.style.background = '#f5f5f5'; }});
+    switchBtn.addEventListener('mouseleave', function() {{ this.style.background = '#fff'; }});
+    
+    btnContainer.appendChild(pauseBtn);
+    btnContainer.appendChild(switchBtn);
+    chartDom.style.position = 'relative';
+    chartDom.appendChild(btnContainer);
+    
+    // 暂停/播放逻辑
+    pauseBtn.addEventListener('click', function() {{
+        if (isPaused) {{
+            // 恢复播放
+            isPaused = false;
+            pauseBtn.innerHTML = '⏸ 暂停';
+            timerId = setInterval(switchChart, {interval});
+        }} else {{
+            // 暂停
+            isPaused = true;
+            pauseBtn.innerHTML = '▶ 播放';
+            clearInterval(timerId);
+            timerId = null;
+        }}
+    }});
+    
+    // 手动切换逻辑
+    switchBtn.addEventListener('click', function() {{
+        currentOption = currentOption === mapOption ? barOption : mapOption;
+        chart.setOption(currentOption, true);
+    }});
+    
+    // 切换函数
+    function switchChart() {{
         try {{
             currentOption = currentOption === mapOption ? barOption : mapOption;
             chart.setOption(currentOption, true);
         }} catch(e) {{
             console.log('切换出错:', e);
         }}
-    }}, {interval});
+    }}
+    
+    // 根据 auto_play 决定是否启动定时器
+    if ({str(auto_play).lower()}) {{
+        timerId = setInterval(switchChart, {interval});
+    }}
     """
     
     renderer.add_script(transition_js)
