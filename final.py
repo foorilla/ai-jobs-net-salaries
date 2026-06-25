@@ -46,15 +46,16 @@
 
 # ## 三、分析目的
 
-# 围绕“数字经济”主题，设定以下 5 个分析目标，每个目标对应一个图表：
-# 
+# 围绕”数字经济”主题，设定以下 6 个分析目标，每个目标对应一个图表：
+#
 # | # | 分析目标 | 图表类型 | 核心问题 |
 # |---|----------|----------|----------|
-# | 1 | 全球 AI 人才薪资地理分布 | Pyecharts 世界地图 | 哪些国家 AI 人才薪资最高？反映各国数字经济发展水平 |
-# | 2 | 薪资年度趋势与远程工作变迁 | Pyecharts 折线图 | 2020—2025 年薪资增长多少？远程工作占比如何变化？ |
-# | 3 | 经验等级与远程模式对薪资的影响 | Seaborn 箱线图 | 经验溢价有多大？远程工作是否影响薪资水平？ |
-# | 4 | 经验→岗位→公司规模流向分析 | Pyecharts 桑基图 | 不同经验的人才流向哪些岗位和公司？人才结构如何？ |
-# | 5 | 岗位薪资年度动态对比 | Pyecharts Timeline 柱状图 | 各岗位薪资排名随时间如何变化？（动态交互） |
+# | 1 | 岗位构成与薪资结构占比 | Pyecharts 嵌套饼图 | AI 人才市场由哪些岗位构成？薪资结构如何分布？ |
+# | 2 | 全球 AI 人才薪资地理分布 | Pyecharts 世界地图 | 哪些国家 AI 人才薪资最高？反映各国数字经济发展水平 |
+# | 3 | 薪资年度趋势与远程工作变迁 | Pyecharts 折线图 | 2020—2025 年薪资增长多少？远程工作占比如何变化？ |
+# | 4 | 经验等级与远程模式对薪资的影响 | Seaborn 箱线图 | 经验溢价有多大？远程工作是否影响薪资水平？ |
+# | 5 | 经验→岗位→公司规模流向分析 | Pyecharts 桑基图 | 不同经验的人才流向哪些岗位和公司？人才结构如何？ |
+# | 6 | 岗位薪资年度动态对比 | Pyecharts Timeline 柱状图 | 各岗位薪资排名随时间如何变化？（动态交互） |
 
 # ## 四、数据分析与可视化过程
 
@@ -221,11 +222,196 @@ df['company_label'] = df['company_size'].map(size_labels)
 df['remote_label'] = df['remote_ratio'].map(remote_labels)
 
 
-# ### 3. 全球 AI 人才薪资地理分布（Pyecharts 世界地图）
-# 
-# **分析目标**：展示全球各国 AI/ML 人才薪资中位数的地理分布，间接反映各国数字经济发展水平和 AI 产业成熟度。
+# ### 3. 岗位构成与薪资结构占比（Pyecharts 嵌套饼图）
+#
+# **分析目标**：展示 AI/ML 人才市场的岗位类别构成（内圈）与整体薪资区间分布（外圈），为后续分析提供全局概览。
 
 # In[24]:
+
+
+# 计算内圈数据：各岗位类别的人数
+inner_counts = df['job_category'].value_counts()
+inner_data = [{"value": int(v), "name": k} for k, v in inner_counts.items()]
+
+# 计算外圈数据：各薪资区间的人数
+bin_order = ['<$80K', '$80-120K', '$120-160K', '$160-220K', '>$220K']
+outer_counts = df['salary_bin'].value_counts().reindex(bin_order)
+outer_data = [{"value": int(v), "name": k} for k, v in outer_counts.items()]
+
+print('=== 岗位类别分布 ===')
+for d in inner_data:
+    print(f"  {d['name']}: {d['value']:,} ({d['value']/len(df)*100:.1f}%)")
+print()
+print('=== 薪资区间分布 ===')
+for d in outer_data:
+    print(f"  {d['name']}: {d['value']:,} ({d['value']/len(df)*100:.1f}%)")
+
+
+# In[25]:
+
+
+# 蓝绿色系配色：前 9 个用于内圈岗位，后 5 个用于外圈薪资区间
+pie_colors = [
+    '#5470c6', '#6e8cd6', '#91cc75', '#73c0de', '#3ba272',
+    '#fac858', '#fc8452', '#9a60b4', '#ea7ccc',
+    '#d4e6f1', '#a9cce3', '#5499c7', '#2e86c1', '#1b4f72',
+]
+
+# 富文本格式化函数
+rich_formatter = """function(params) {
+    return '{a|' + params.seriesName + '}{abg|}\\n{hr|}\\n  {b|' +
+           params.name + '：}' + params.value + '  {per|' +
+           params.percent + '%}  ';
+}"""
+
+pie = (
+    Pie(init_opts=opts.InitOpts(
+        width='1000px',
+        height='700px',
+        theme='light',
+    ))
+    .add(
+        series_name='岗位类别',
+        data_pair=[(d['name'], d['value']) for d in inner_data],
+        radius=['10%', '40%'],      # 内圈：从10%到40%（原来是0到30%，整体放大并外移）
+        selected_mode='single',
+        selected_offset=10,
+        label_opts=opts.LabelOpts(
+            position='inner',
+            font_size=12,
+        ),
+        center=['50%', '45%'],      # 饼图中心位置：水平居中，垂直上移（默认50%）
+    )
+    .add(
+        series_name='薪资区间',
+        data_pair=[(d['name'], d['value']) for d in outer_data],
+        radius=['48%', '60%'],      # 外圈：从48%到60%（原来是45%到60%，整体放大）
+        center=['50%', '45%'],      # 与外圈使用相同的中心位置
+        label_opts=opts.LabelOpts(
+            formatter=JsCode(rich_formatter),
+            background_color='#F6F8FC',
+            border_color='#8C8D8E',
+            border_width=1,
+            border_radius=4,
+            rich={
+                'a': {
+                    'color': '#6E7079',
+                    'lineHeight': 22,
+                    'align': 'center',
+                },
+                'hr': {
+                    'borderColor': '#8C8D8E',
+                    'width': '100%',
+                    'borderWidth': 1,
+                    'height': 0,
+                },
+                'b': {
+                    'color': '#2e86c1',
+                    'fontSize': 14,
+                    'fontWeight': 'bold',
+                    'lineHeight': 33,
+                },
+                'per': {
+                    'color': '#fff',
+                    'backgroundColor': '#3ba272',
+                    'padding': [3, 4],
+                    'borderRadius': 4,
+                },
+            },
+        ),
+    )
+    .set_colors(pie_colors)
+    .set_global_opts(
+        title_opts=opts.TitleOpts(
+            title='AI/ML 人才市场：岗位构成与薪资结构',
+            subtitle='内圈：岗位类别占比 | 外圈：薪资区间分布 | 点击内圈可选中岗位',
+            pos_left='center',
+            pos_top='2%',
+            item_gap=8,
+            title_textstyle_opts=opts.TextStyleOpts(
+                font_size=18,
+                font_weight='bold',
+            ),
+            subtitle_textstyle_opts=opts.TextStyleOpts(
+                font_size=11,
+                color='#666',
+            ),
+            padding=[5, 10],
+        ),
+        tooltip_opts=opts.TooltipOpts(
+            trigger='item',
+            formatter='{a}<br/>{b}: {c} ({d}%)',
+        ),
+        legend_opts=opts.LegendOpts(
+            type_='plain',
+            orient='horizontal',
+            pos_left='center',
+            pos_bottom='5%',
+            item_gap=20,
+            background_color='rgba(255, 255, 255, 0.85)',
+            border_color='#ccc',
+            border_width=1,
+            padding=[8, 15],
+            textstyle_opts=opts.TextStyleOpts(font_size=11),
+        ),
+        graphic_opts=[
+            opts.GraphicGroup(
+                graphic_item=opts.GraphicItem(
+                    left='center',
+                    bottom='10px',
+                    z=100,
+                ),
+                children=[
+                    opts.GraphicText(
+                        graphic_item=opts.GraphicItem(
+                            left='center',
+                            bottom='20px',
+                        ),
+                        graphic_textstyle_opts=opts.GraphicTextStyleOpts(
+                            text='数据来源: aijobs.net (2020-2025)',
+                            font_size=12,
+                            text_align='center',
+                        ),
+                    ),
+                ],
+            ),
+        ],
+    )
+)
+
+# 通过 options 字典直接设置 labelLine
+pie.options.get('series', [{}])[0].update({'labelLine': {'show': False}})
+pie.options.get('series', [{}])[1].update({'labelLine': {'show': True, 'length': 30, 'length2': 50}})
+
+# 注入 JavaScript 来设置默认选中
+pie.add_js_funcs("""
+    setTimeout(function() {
+        var chartDom = document.querySelector('.chart-container');
+        var chartInstance = echarts.getInstanceByDom(chartDom);
+        if (chartInstance) {
+            chartInstance.dispatchAction({
+                type: 'pieSelect',
+                seriesIndex: 0,
+                name: 'AI/ML Specialist'
+            });
+        }
+    }, 200);
+""")
+
+display_chart(pie)
+
+
+# #### 饼图分析
+#
+# - **岗位构成**：Data Scientist、Software Engineer 和 Data Engineer 是 AI/ML 人才市场的三大核心岗位，合计占数据总量的近半数。AI/ML Specialist 作为最高薪的技术岗位，占比相对较小但薪资溢价显著
+# - **薪资结构**：大多数 AI 人才的年薪集中在 $80K—$160K 区间，薪酬分布呈现明显的右偏特征。>$220K 的高薪群体主要由资深技术专家和高管构成
+# - **数字经济启示**：岗位构成的多样性和薪资的分层结构，反映了 AI 产业从基础数据工程到高级算法研究的完整人才链条。不同岗位和薪资层级共同支撑起数字经济的运行
+
+# ### 4. 全球 AI 人才薪资地理分布（Pyecharts 世界地图）
+#
+# **分析目标**：展示全球各国 AI/ML 人才薪资中位数的地理分布，间接反映各国数字经济发展水平和 AI 产业成熟度。
+
+# In[26]:
 
 
 # 按公司所在地统计薪资中位数
@@ -291,7 +477,7 @@ print(f'薪资最高国家: {max(map_data, key=lambda x: x[1])}')
 print(f'薪资最低国家: {min(map_data, key=lambda x: x[1])}')
 
 
-# In[25]:
+# In[27]:
 
 
 # 创建世界地图
@@ -386,11 +572,11 @@ display_chart(salary_map)
 # - **发展中国家挑战**：非洲、拉美和部分亚洲发展中国家的 AI 人才薪资明显偏低，揭示了全球数字鸿沟的现实——技术和资本密集度高的国家占据产业链高端
 # - **数字经济启示**：AI 人才薪资的地理分布与各国数字经济发展水平高度正相关。发展 AI 产业、培养高端人才是缩小数字鸿沟的关键路径
 
-# ### 4. 薪资年度趋势与远程工作模式变迁（Pyecharts 双轴折线图）
+# ### 5. 薪资年度趋势与远程工作模式变迁（Pyecharts 双轴折线图）
 # 
 # **分析目标**：展示 2020—2025 年 AI 人才薪资的变化趋势，以及远程工作占比的同步变迁，反映数字经济驱动下的就业形态变革。
 
-# In[26]:
+# In[28]:
 
 
 # 按年度统计薪资均值和远程工作占比
@@ -414,7 +600,7 @@ for _, r in yearly.iterrows():
 yearly['yoy_growth'] = yearly['median_salary'].pct_change() * 100
 
 
-# In[27]:
+# In[29]:
 
 
 # 创建双轴折线图
@@ -548,11 +734,11 @@ display_chart(line_chart)
 # - **混合模式式微**：混合办公（50% 远程）占比始终很低，企业在远程和现场之间更倾向“全有或全无”模式
 # - **数字经济启示**：薪资持续上涨表明 AI 人才仍是全球数字经济的稀缺资源。远程工作的普及打破了地理限制，为发展中国家人才提供了参与全球 AI 产业的新路径
 
-# ### 5. 经验等级与远程工作对薪资的影响（Seaborn 分面箱线图）
+# ### 6. 经验等级与远程工作对薪资的影响（Seaborn 分面箱线图）
 # 
 # **分析目标**：结合经验等级和远程工作模式，从统计角度展示不同群体的薪资分布差异。
 
-# In[28]:
+# In[30]:
 
 
 # 筛选数据：remote_ratio 以 0 和 100 为主，50 极少，合并展示
@@ -630,11 +816,11 @@ plt.show()
 # - 混合模式样本极少（仅 0.2%），尚不构成有统计意义的群体
 # - 数字经济启示：远程工作打破了地理壁垒，使企业可以在更广范围内竞争人才，同时也为人才提供了更多选择空间
 
-# ### 6. 经验等级 → 岗位类别 → 公司规模 流向分析（Pyecharts 桑基图）
+# ### 7. 经验等级 → 岗位类别 → 公司规模 流向分析（Pyecharts 桑基图）
 # 
 # **分析目标**：展示不同经验等级的人才流向哪些岗位和公司规模，揭示 AI 行业的人才结构特征。
 
-# In[29]:
+# In[31]:
 
 
 from pyecharts.charts import Grid
@@ -766,11 +952,11 @@ display_chart(sankey)
 #   - Small（小型/创业公司）尽管样本少，但吸引了各个岗位类别的人才，反映了 AI 创业生态的多样性
 # - **数字经济启示**：人才从入门到高管、从单一岗位到管理岗位的流动，展示了 AI 行业成熟的职业发展路径。数据生态中的每个环节（数据科学、数据工程、软件工程）都需要不同经验层次的从业者
 
-# ### 7. 岗位薪资年度动态对比（Pyecharts Timeline 柱状图） ⬅ 动态交互
+# ### 8. 岗位薪资年度动态对比（Pyecharts Timeline 柱状图） ⬅ 动态交互
 # 
 # **分析目标**：按年度展示各岗位类别的平均薪资排名变化，通过年份滑块实现动态切换，直观感受薪资结构的时间演变。
 
-# In[30]:
+# In[32]:
 
 
 # 按年份和岗位类别统计平均薪资
@@ -929,6 +1115,7 @@ display_chart(tl)
 # 
 # | 图表 | 选择理由 |
 # |------|----------|
+# | **嵌套饼图** | 内圈展示岗位构成，外圈展示薪资区间分布，两层结构在同一视图中同时回答"谁在市场中"和"薪资怎么分布"，点击内圈可选中岗位 |
 # | **世界地图** | 薪资数据具有天然的空间属性，地图能最直观地展示全球分布格局 |
 # | **双轴折线图** | 同时展示薪资（数值）和远程占比（百分比）两个不同量纲的时间序列，双 Y 轴是最经济的方案 |
 # | **分面箱线图** | 箱线图能同时展示中位数、四分位距和离群值，比柱状图+误差棒更准确地反映分布形态。分面（subplot）在同一视图中对比两个维度的效应 |
@@ -937,7 +1124,8 @@ display_chart(tl)
 # 
 # ### 5.2 配色方案
 # 
-# - **整体风格**：以蓝绿色系为主色调，体现“科技+数据”的理性专业感
+# - **整体风格**：以蓝绿色系为主色调，体现”科技+数据”的理性专业感
+# - **嵌套饼图**：内圈 9 个岗位类别使用蓝绿色系区分色，外圈 5 个薪资区间使用浅→深渐变（薪资越低越浅、越高越深），富文本标签对齐蓝绿主题
 # - **地图**：深色主题 (dark theme)，VisualMap 从浅蓝（低薪资）到深红（高薪资），对比突出
 # - **折线图**：薪资用实线蓝色 (#5470c6)，远程占比用虚线绿色 (#91cc75)，区分清晰
 # - **箱线图**：Blues_r 和 Greens_r 渐变，色调统一
@@ -945,6 +1133,7 @@ display_chart(tl)
 # 
 # ### 5.3 交互功能设计
 # 
+# - **饼图选中交互**：点击内圈岗位可选中并突出显示，外圈展示对应薪资分布，鼠标悬停显示详细占比
 # - **Timeline 滑块**：支持手动拖动和自动轮播（2 秒/帧），用户可自由选择关注特定年份
 # - **地图 Tooltip**：悬停显示国家名称和具体薪资数值，减少视觉搜索成本
 # - **桑基图悬停**：鼠标悬停时高亮对应流向路径，帮助追踪特定人才群体的流向
@@ -976,11 +1165,12 @@ display_chart(tl)
 # 
 # ### 7.1 数据分析结果总结
 # 
-# 1. **地理分布**：AI/ML 人才薪资呈现显著的全球不均衡分布。北美和西欧薪资最高，与这些地区的数字经济领先地位一致。亚洲主要经济体（日本、韩国、新加坡）薪资水平接近欧美，发展中国家则面临较大差距
-# 2. **时间趋势**：2020—2025 年间 AI 人才薪资持续增长，中位数年均增长约 3-5%。同期远程工作占比大幅上升，数字化工具重塑了就业形态
-# 3. **经验溢价**：经验是薪资最重要的决定因素之一。从入门到高管，每提升一个等级都有显著的薪资增长，验证了数字技能积累的市场价值
-# 4. **岗位结构**：Data Scientist、Software Engineer 和 Data Engineer 是三大核心岗位，占数据总量的 47%。AI/ML Specialist 是薪资最高的技术岗位
-# 5. **公司规模**：数据集中中型公司占绝对主导，但创业公司和小型企业同样在吸引 AI 人才，展示了 AI 创业生态的活力
+# 1. **市场构成**：AI/ML 人才市场由 9 大岗位类别构成，Data Scientist、Software Engineer 和 Data Engineer 是三大核心岗位。薪资呈右偏分布，大多数人才集中在 $80K—$160K 区间，>$220K 的高薪群体由资深专家和高管构成
+# 2. **地理分布**：AI/ML 人才薪资呈现显著的全球不均衡分布。北美和西欧薪资最高，与这些地区的数字经济领先地位一致。亚洲主要经济体（日本、韩国、新加坡）薪资水平接近欧美，发展中国家则面临较大差距
+# 3. **时间趋势**：2020—2025 年间 AI 人才薪资持续增长，中位数年均增长约 3-5%。同期远程工作占比大幅上升，数字化工具重塑了就业形态
+# 4. **经验溢价**：经验是薪资最重要的决定因素之一。从入门到高管，每提升一个等级都有显著的薪资增长，验证了数字技能积累的市场价值
+# 5. **岗位结构**：Data Scientist、Software Engineer 和 Data Engineer 是三大核心岗位，占数据总量的 47%。AI/ML Specialist 是薪资最高的技术岗位
+# 6. **公司规模**：数据集中中型公司占绝对主导，但创业公司和小型企业同样在吸引 AI 人才，展示了 AI 创业生态的活力
 # 
 # ### 7.2 对国家/社会问题的启示与建议（课程思政）
 # 
@@ -1018,7 +1208,7 @@ display_chart(tl)
 # | Timeline 交互实现 | 使用 Pyecharts Timeline 组件，为每个年份创建独立的 Bar 实例，通过 `add_schema` 配置自动轮播和滑块 |
 # | 双轴折线图 | 使用 `extend_axis` 添加第二 Y 轴，通过 `yaxis_index` 参数关联不同数据系列 |
 
-# In[31]:
+# In[33]:
 
 
 get_ipython().system('jupyter nbconvert --to html final.ipynb')
