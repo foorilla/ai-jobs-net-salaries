@@ -541,6 +541,10 @@ add_code([
     "",
     "plt.suptitle('AI/ML 人才薪资：经验等级与远程模式的影响', fontsize=16, fontweight='bold', y=1.02)",
     "plt.tight_layout()",
+    "",
+    "# 添加数据来源标注",
+    "fig.text(0.5, -0.02, '数据来源: aijobs.net (2020-2025)', ha='center', fontsize=10, color='gray', style='italic')",
+    "",
     "plt.show()",
 ])
 
@@ -628,7 +632,7 @@ add_code([
     "    .set_global_opts(",
     "        title_opts=opts.TitleOpts(",
     "            title='AI 人才流向：经验等级 → 岗位类别 → 公司规模',",
-    "            subtitle='带宽代表人才流量 | 仅展示流量 ≥ 200 的边',",
+    "            subtitle='带宽代表人才流量 | 仅展示流量 ≥ 200 的边 | 数据来源: aijobs.net (2020-2025)',",
     "            pos_left='center',",
     "        ),",
     "        tooltip_opts=opts.TooltipOpts(trigger='item', trigger_on='mousemove'),",
@@ -694,9 +698,9 @@ add_code([
     "            label_opts=opts.LabelOpts(position='right', formatter='\${c:.0f}K'),",
     "            itemstyle_opts=opts.ItemStyleOpts(",
     "                color=JsCode(",
-    "                    'new echarts.graphic.LinearGradient(0, 0, 1, 0, ['",
-    "                    '  {offset: 0, color: \"#5470c6\"},',",
-    "                    '  {offset: 1, color: \"#91cc75\"}])'",
+    "                    'new echarts.graphic.LinearGradient(0, 0, 1, 0, ['
+    "                    '  {offset: 0, color: \"#5470c6\"},'
+    "                    '  {offset: 1, color: \"#91cc75\"}]'",
     "                )",
     "            ),",
     "        )",
