@@ -169,98 +169,163 @@ def get_chart_urls(chart: Base, cdn_provider: str = DEFAULT_CDN, custom_cdn_base
     return dep_manager.get_dependencies(chart)
 
 
-# ========== 新增：带切换效果的 display 函数 ==========
+# ========== 修复后的深度合并函数 ==========
+def _deep_update(base: dict, override: dict):
+    """
+    递归合并字典，override 覆盖 base 中的同名 key。
+    支持数组内对象的合并（按索引位置）。
+    """
+    for key, value in override.items():
+        if key in base:
+            # 如果两者都是列表，按索引递归合并列表中的元素
+            if isinstance(base[key], list) and isinstance(value, list):
+                for i in range(min(len(base[key]), len(value))):
+                    if isinstance(base[key][i], dict) and isinstance(value[i], dict):
+                        _deep_update(base[key][i], value[i])
+                    else:
+                        base[key][i] = value[i]
+                # 如果 override 的列表更长，追加多余元素
+                if len(value) > len(base[key]):
+                    base[key].extend(value[len(base[key]):])
+            # 如果两者都是字典，递归合并
+            elif isinstance(base[key], dict) and isinstance(value, dict):
+                _deep_update(base[key], value)
+            # 否则直接覆盖
+            else:
+                base[key] = value
+        else:
+            # base 中没有这个 key，直接添加
+            base[key] = value
+
+
+# ========== 修改后的：带切换效果的 display 函数 ==========
 def display_transition_chart(
     map_chart: Base,
     bar_chart: Base,
-    map_data: list,         # [(name, value), ...] 格式的原始数据
+    map_data: list,
     chart_id: str = "myChart",
     interval: int = 3000,
+    bar_option_override: dict = None,
     cdn_provider: str = DEFAULT_CDN
 ):
-    """
-    在 Jupyter Notebook 中渲染一个地图和柱状图自动切换的图表。
-    
-    参数:
-        map_chart: Pyecharts Map 实例
-        bar_chart: Pyecharts Bar 实例 (仅用于提取配置，不直接渲染)
-        map_data: 原始数据 [(name, value), ...]
-        chart_id: 图表 DOM 元素的 ID
-        interval: 切换间隔（毫秒）
-    """
     renderer = EChartsRenderer(cdn_provider)
     
-    # 构建切换的 JS 代码
     data_json = json.dumps(map_data)
-    values = [item[1] for item in map_data]
+    
+    # ========== 最简默认配置（只包含必要的框架） ==========
+    default_bar_option = {
+        "title": {
+            "text": "数据排名",
+            "left": "center"
+        },
+        "tooltip": {
+            "trigger": "axis",
+            "axisPointer": {"type": "shadow"}
+        },
+        "grid": {
+            "left": "15%",
+            "right": "10%",
+            "bottom": "10%",
+            "top": "15%"
+        },
+        "xAxis": {
+            "type": "value"
+        },
+        "yAxis": {
+            "type": "category",
+            "data": []  # 占位，JS 中会被替换
+        },
+        "animationDurationUpdate": 1000,
+        "series": [{
+            "type": "bar",
+            "id": "salary",
+            "data": [],  # 占位，JS 中会被替换
+            "universalTransition": True
+        }]
+    }
+    
+    # 合并用户自定义配置
+    if bar_option_override:
+        _deep_update(default_bar_option, bar_option_override)
+    
+    bar_option_json = json.dumps(default_bar_option)
     
     transition_js = f"""
     var data = {data_json};
     var names = data.map(function(item) {{ return item[0]; }});
     var values = data.map(function(item) {{ return item[1]; }});
 
-    // 查找 echarts 实例
+    // 从 JSON 加载柱状图配置
+    var barOption = {bar_option_json};
+
+    // 🔧 强制注入数据（确保数据一定存在）
+    barOption.yAxis.data = names;
+    barOption.series[0].data = values;
+    barOption.series[0].id = 'salary';
+    barOption.series[0].universalTransition = true;
+
+    // 🔧 注入 formatter 函数（JSON 无法序列化函数）
+    if (barOption.tooltip && !barOption.tooltip.formatter) {{
+        barOption.tooltip.formatter = function(params) {{
+            if (params && params.length > 0) {{
+                return params[0].name + ': $' + params[0].value.toLocaleString();
+            }}
+            return '';
+        }};
+    }}
+
+    if (barOption.xAxis && barOption.xAxis.axisLabel && !barOption.xAxis.axisLabel.formatter) {{
+        barOption.xAxis.axisLabel.formatter = function(val) {{
+            return '$' + Math.round(val / 1000) + 'k';
+        }};
+    }}
+
+    // 🔧 注入 series label 的 formatter
+    if (barOption.series && barOption.series[0] && barOption.series[0].label) {{
+        if (barOption.series[0].label.show && !barOption.series[0].label.formatter) {{
+            barOption.series[0].label.formatter = function(params) {{
+                return '$' + (params.value / 1000).toFixed(1) + 'k';
+            }};
+        }}
+    }}
+
+    // 🔧 查找 echarts 实例
     var chartDom = document.getElementById('{chart_id}');
     if (!chartDom) {{
-        // 如果没找到指定 ID，尝试找第一个 echarts 实例
-        var allDoms = document.querySelectorAll('[id]');
-        for (var i = 0; i < allDoms.length; i++) {{
-            if (echarts.getInstanceByDom(allDoms[i])) {{
-                chartDom = allDoms[i];
-                break;
-            }}
+        var allDoms = document.querySelectorAll('[_echarts_instance_]');
+        if (allDoms.length > 0) {{
+            chartDom = allDoms[0];
         }}
     }}
     
-    if (!chartDom) return;
+    if (!chartDom) {{
+        console.log('未找到 ECharts 实例');
+        return;
+    }}
+    
     var chart = echarts.getInstanceByDom(chartDom);
-    if (!chart) return;
+    if (!chart) {{
+        console.log('无法获取 ECharts 实例');
+        return;
+    }}
 
-    // 给当前地图 series 添加 universalTransition 所需的属性
+    // 🔧 给当前地图 series 添加 universalTransition 所需的属性
     var mapOption = chart.getOption();
-    mapOption.series[0].id = 'salary';
-    mapOption.series[0].universalTransition = true;
-    chart.setOption(mapOption, true);
+    if (mapOption.series && mapOption.series.length > 0) {{
+        mapOption.series[0].id = 'salary';
+        mapOption.series[0].universalTransition = true;
+        chart.setOption(mapOption, true);
+    }}
 
-    // 构建柱状图 option
-    var barOption = {{
-        title: {{ text: '全球薪资中位数排名', left: 'center' }},
-        tooltip: {{
-            trigger: 'axis',
-            axisPointer: {{ type: 'shadow' }},
-            formatter: function(params) {{
-                return params[0].name + ': $' + params[0].value.toLocaleString();
-            }}
-        }},
-        grid: {{ left: '15%', right: '10%', bottom: '10%' }},
-        xAxis: {{
-            type: 'value',
-            name: '薪资中位数 (USD)',
-            axisLabel: {{
-                formatter: function(val) {{
-                    return '$' + Math.round(val / 1000) + 'k';
-                }}
-            }}
-        }},
-        yAxis: {{
-            type: 'category',
-            axisLabel: {{ rotate: 30 }},
-            data: names
-        }},
-        animationDurationUpdate: 1000,
-        series: [{{
-            type: 'bar',
-            id: 'salary',
-            data: values,
-            universalTransition: true
-        }}]
-    }};
-
-    // 定时切换
+    // 🔧 定时切换（增加错误处理）
     var currentOption = mapOption;
     setInterval(function() {{
-        currentOption = currentOption === mapOption ? barOption : mapOption;
-        chart.setOption(currentOption, true);
+        try {{
+            currentOption = currentOption === mapOption ? barOption : mapOption;
+            chart.setOption(currentOption, true);
+        }} catch(e) {{
+            console.log('切换出错:', e);
+        }}
     }}, {interval});
     """
     
