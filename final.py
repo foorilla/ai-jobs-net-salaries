@@ -64,7 +64,7 @@
 # In[18]:
 
 
-from pyecharts_exporter import display_chart
+from pyecharts_exporter import display_chart, display_transition_chart
 
 import warnings
 import pandas as pd
@@ -466,11 +466,12 @@ iso_to_name = {
 country_salary['country_name'] = country_salary['company_location'].map(iso_to_name)
 country_salary = country_salary.dropna(subset=['country_name'])
 
-# 准备地图数据
+# 准备地图数据（按薪资升序排列，同时用于地图和柱状图切换）
 map_data = [
     (row['country_name'], int(row['median_salary']))
     for _, row in country_salary.iterrows()
 ]
+map_data.sort(key=lambda x: x[1])
 
 print(f'参与地图绘制的国家/地区数: {len(map_data)}')
 print(f'薪资最高国家: {max(map_data, key=lambda x: x[1])}')
@@ -561,7 +562,23 @@ salary_map = (
     )
 )
 
-display_chart(salary_map)
+# 创建柱状图（用于地图↔柱状图切换，不直接渲染）
+bar_chart = (
+    Bar()
+    .add_xaxis([name for name, _ in map_data])
+    .add_yaxis('薪资中位数 (USD)', [val for _, val in map_data])
+    .reversal_axis()
+    .set_global_opts(
+        title_opts=opts.TitleOpts(title='全球 AI 人才薪资中位数排名'),
+        tooltip_opts=opts.TooltipOpts(
+            trigger='axis',
+            formatter='{b}: ${c}',
+        ),
+    )
+)
+
+# 使用地图↔柱状图自动切换
+display_transition_chart(salary_map, bar_chart, map_data)
 
 
 # #### 地图分析
