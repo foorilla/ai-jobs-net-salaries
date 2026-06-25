@@ -477,11 +477,13 @@ print(f'参与地图绘制的国家/地区数: {len(map_data)}')
 print(f'薪资最高国家: {max(map_data, key=lambda x: x[1])}')
 print(f'薪资最低国家: {min(map_data, key=lambda x: x[1])}')
 
+# 取 Top 15 用于柱状图排名（地图仍用完整数据）
+map_data_top15 = map_data[-15:]
+
 
 # In[27]:
 
 
-# 创建世界地图
 salary_map = (
     Map(init_opts=opts.InitOpts(width='1200px', height='700px', theme='light'))
     .add(
@@ -533,8 +535,8 @@ salary_map = (
         visualmap_opts=opts.VisualMapOpts(
             min_=int(country_salary['median_salary'].min()),
             max_=int(country_salary['median_salary'].max()),
-            range_text=['高薪资', '低薪资'],
-            range_color=['#4575b4', '#91bfdb', '#ffffbf', '#fc8d59', '#d73027'],  # 经典热力渐变
+            range_text=['高薪资', '低薪资'], 
+            range_color=['#4575b4', '#91bfdb', '#ffffbf', '#fc8d59', '#d73027'],
             is_piecewise=False,
             pos_left='3%',
             pos_bottom='8%',
@@ -562,24 +564,125 @@ salary_map = (
     )
 )
 
-# 创建柱状图（用于地图↔柱状图切换，不直接渲染）
 bar_chart = (
     Bar()
-    .add_xaxis([name for name, _ in map_data])
-    .add_yaxis('薪资中位数 (USD)', [val for _, val in map_data])
+    .add_xaxis([name for name, _ in map_data_top15])
+    .add_yaxis('薪资中位数 (USD)', [val for _, val in map_data_top15])
     .reversal_axis()
     .set_global_opts(
-        title_opts=opts.TitleOpts(title='全球 AI 人才薪资中位数排名'),
+        title_opts=opts.TitleOpts(
+            title='全球 AI/ML 人才薪资中位数 Top 15',
+            subtitle='按薪资中位数降序排列',
+            pos_left='center',
+            pos_top='2%',
+            item_gap=8,
+            title_textstyle_opts=opts.TextStyleOpts(
+                font_size=18,
+                font_weight='bold'
+            ),
+            subtitle_textstyle_opts=opts.TextStyleOpts(
+                font_size=11,
+                color='#666'
+            ),
+            padding=[5, 10],
+        ),
         tooltip_opts=opts.TooltipOpts(
             trigger='axis',
-            formatter='{b}: ${c}',
+            formatter='{b}: ${c:,}',
         ),
+        graphic_opts=[
+            opts.GraphicGroup(
+                graphic_item=opts.GraphicItem(
+                    left="center",
+                    bottom="10px",
+                    z=100
+                ),
+                children=[
+                    opts.GraphicText(
+                        graphic_item=opts.GraphicItem(
+                            left="center",
+                            bottom="20px"
+                        ),
+                        graphic_textstyle_opts=opts.GraphicTextStyleOpts(
+                            text="数据来源: aijobs.net (2020-2025)",
+                            font_size=12,
+                            text_align="center",
+                        )
+                    )
+                ]
+            )
+        ],
     )
 )
 
-# 使用地图↔柱状图自动切换
-display_transition_chart(salary_map, bar_chart, map_data)
+# ========== 👇 新增：定义柱状图的 JS 配置 ==========
+bar_option_override = {
+    "title": {
+        "text": "全球 AI/ML 人才薪资中位数 Top 15",
+        "subtext": "按薪资中位数降序排列，仅展示前 15 名",
+        "left": "center",
+        "top": "2%",
+        "itemGap": 8,
+        "textStyle": {
+            "fontSize": 18,
+            "fontWeight": "bold"
+        },
+        "subtextStyle": {
+            "fontSize": 11,
+            "color": "#666"
+        },
+        "padding": [5, 10]
+    },
+    "grid": {
+        "left": "18%",
+        "right": "12%",
+        "bottom": "12%",
+        "top": "18%"
+    },
+    "xAxis": {
+        "type": "value",
+        "min": 90000,
+        "name": "薪资中位数 (USD)",
+        "nameLocation": "center",
+        "nameGap": 35
+    },
+    "series": [{
+        "itemStyle": {"color": "#4575b4"},
+        "label": {
+            "show": True,
+            "position": "right"
+        }
+    }],
+    "graphic": [
+        {
+            "type": "group",
+            "left": "center",
+            "bottom": "5px",
+            "z": 100,
+            "children": [
+                {
+                    "type": "text",
+                    "left": "center",
+                    "bottom": "10px",
+                    "style": {
+                        "text": "数据来源: aijobs.net (2020-2025)",
+                        "fontSize": 12,
+                        "textAlign": "center",
+                        "fill": "#999"
+                    }
+                }
+            ]
+        }
+    ]
+}
 
+display_transition_chart(
+    salary_map, 
+    bar_chart, 
+    map_data_top15,
+    bar_option_override=bar_option_override,
+    interval=5000,
+)
 
 # #### 地图分析
 # 
